@@ -1,0 +1,8 @@
+
+db_name: sqlite:///db/stacker.db
+
+log_name: StackerNews
+log_file: log/stacker-news-top.log
+
+tg_chat_id: -1000000000001
+tg_token: 123456789:TELEGRAM_BOT_TOKEN_SAMPLE

@@ -1,0 +1,22 @@
+!.gitignore
+
+# Vim
+*.swp
+.idea
+
+# Byte-compiled / optimized / DLL files
+__pycache__
+*.py[cod]
+
+# Database
+*.db
+
+# Config
+/conf/config.yaml
+
+# venv
+/venv/
+
+# macOS
+._*
+.DS_Store
