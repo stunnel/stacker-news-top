@@ -1,0 +1,13 @@
+[Unit]
+Description=Stacker News Trending Bot
+After=multi-user.target
+
+[Service]
+Type=idle
+#User=nobody
+DynamicUser=yes
+WorkingDirectory=/opt/stacker-news-top
+ExecStart=/usr/bin/python3 app.py
+
+[Install]
+WantedBy=multi-user.target
