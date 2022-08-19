@@ -17,3 +17,7 @@ Bot uses [Telegram Bot API](https://core.telegram.org/bots/api) to post messages
   - you can also change the `db_name`, `log_name` and `log_file`
 - Run `python3 app.py` in the project folder
 - Use misc/stackernews.service to run the bot as a service
+
+## Stacker News Trending Channel
+
+Link to join the channel: <https://t.me/stackernewstop>
