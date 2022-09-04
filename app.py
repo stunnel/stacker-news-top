@@ -1,13 +1,14 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import schedule
+from apscheduler.schedulers.blocking import BlockingScheduler
 from stackernews import StackerNews
 
 stacker = StackerNews()
-schedule.every(10).minutes.do(stacker.run)
+
+scheduler = BlockingScheduler(timezone='Asia/Hong_Kong')
+scheduler.add_job(stacker.run, 'interval', minutes=10, id='stacker')
 
 
 if __name__ == '__main__':
-    while True:
-        schedule.run_pending()
+    scheduler.start()
