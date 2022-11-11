@@ -7,7 +7,7 @@ from lib import Database, session, logger, replace, telegram_bot_send_text
 class StackerNews(object):
     def __init__(self):
         self.domain = 'https://stacker.news'
-        self.url = f'{self.domain}/top/posts/day'
+        self.url = f'{self.domain}/top/posts?when=day'
         self.headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
                                       'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36',
                         'Referer': self.domain
