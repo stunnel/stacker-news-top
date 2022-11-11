@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import os
-import yaml
-import logging
 import requests
 import urllib3
 from requests.adapters import HTTPAdapter
@@ -43,16 +40,6 @@ def create_session(connections=20, retries=5, backoff_factor=2,
     return _session
 
 
-def create_logger(logger_name: str, log_file: str) -> logging.Logger:
-    _logger = logging.getLogger(logger_name)
-    _logger.setLevel(logging.INFO)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    file_handler = logging.FileHandler(log_file)
-    file_handler.setFormatter(formatter)
-    _logger.addHandler(file_handler)
-    return _logger
-
-
 def replace(string: str) -> str:
     """
     Replace parts of a string based on a dictionary.
@@ -71,46 +58,28 @@ def replace(string: str) -> str:
     return string
 
 
-def load_config():
-    """
-    Load config from conf/config.yaml
-    {'db_name': 'sqlite:///db/stacker.db',
-     'log_name': 'StackerNews',
-     'log_file': 'log/stacker-news-top.log',
-     'tg_chat_id': -1000000000001,
-     'tg_token': '123456789:TELEGRAM_BOT_TOKEN_SAMPLE'
-    }
-    """
+def string_to_int(string: str) -> int:
+    def is_digit(string: str) -> bool:
+        string = string.replace('.', '', 1)
+        return string.isdigit()
+
+    def remove_dot(string) -> str:
+        return string.replace('.', '', 1)
+
+    string = string.strip().lower().replace(',', '')
     try:
-        with open('conf/config.yaml', 'r') as f:
-            _config = yaml.safe_load(f)
-    except FileNotFoundError:
-        return load_config_from_env({})
-    except yaml.YAMLError:
-        return load_config_from_env({})
-    except Exception:
-        return load_config_from_env({})
+        result = int(float(string))
+    except ValueError:
+        if string.endswith('k') and is_digit(string[:-1]):
+            result = int(float(string[:-1]) * 1000)
+        elif string.endswith('m') and is_digit(string[:-1]):
+            result = int(float(string[:-1]) * 1000000)
+        elif string.endswith('b') and is_digit(string[:-1]):
+            result = int(float(string[:-1]) * 1000000000)
+        else:
+            result = 0
 
-    return load_config_from_env(_config)
+    return result
 
 
-def load_config_from_env(_config):
-    """
-    Load config from environment variables.
-    """
-    _config_env = {
-        'db_name': os.environ.get('DB_NAME', _config.get('db_name') or 'sqlite:///db/stacker.db'),
-        'log_name': os.environ.get('LOG_NAME', _config.get('log_name') or 'StackerNews'),
-        'log_file': os.environ.get('LOG_FILE', _config.get('log_file') or 'log/stacker-news-top.log'),
-        'tg_chat_id': os.environ.get('TG_CHAT_ID', _config.get('tg_chat_id')),
-        'tg_token': os.environ.get('TG_TOKEN', _config.get('tg_token'))
-    }
-
-    if not _config_env['tg_chat_id'] or not _config_env['tg_token']:
-        raise ValueError('Missing Telegram chat_id or token.')
-
-    return _config_env
-
-config = load_config()
 session = create_session()
-logger = create_logger(config['log_name'], config['log_file'])

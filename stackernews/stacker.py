@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from bs4 import BeautifulSoup
-from lib import Database, session, logger, replace, telegram_bot_send_text
+from lib.utils import session, replace
+from lib.config import create_logger
+from lib.tg_bot import TelegramBot
+from lib.db import Database
 
 
 class StackerNews(object):
@@ -14,7 +17,9 @@ class StackerNews(object):
                         }
         self.message_template = '*{title}*\n_{sats} sats, {comments} comments_\n{url}'  # Markdown format
         self.session = session
-        self.db = Database()
+        self.db = None
+        self.bot = None
+        self.logger = None
 
         self.soup_top = None        # BeautifulSoup object
         self.threads = []           # BeautifulSoup objects of threads
@@ -30,21 +35,21 @@ class StackerNews(object):
         """
         Get top page of Stacker News and save it to self.soup_top
         """
-        logger.info('Getting html from: {}'.format(self.url))
+        self.logger.info('Getting html from: {}'.format(self.url))
         try:
             response = self.session.get(self.url, headers=self.headers, timeout=60)
             response.encoding = 'utf-8'
             self.soup_top = BeautifulSoup(response.text, 'html.parser')
         except Exception as e:
-            logger.error(e)
+            self.logger.error(e)
 
     def get_threads(self):
         """
         Get threads from top page of Stacker News and save them to self.threads
         """
-        logger.info('Getting threads.')
+        self.logger.info('Getting threads.')
         self.threads = self.soup_top.find_all('div', class_=self.class_threads)
-        logger.info('Got {} threads.'.format(len(self.threads)))
+        self.logger.info('Got {} threads.'.format(len(self.threads)))
 
     def get_thread(self):
         """
@@ -59,7 +64,7 @@ class StackerNews(object):
             thread_comments = thread.find_all('a', class_=self.class_comments)[1].text.replace(' comments', '')
             thread = {'id': thread_id, 'title': thread_title, 'sats': thread_sats, 'comments': thread_comments}
             self.threads_list.append(thread)
-        logger.info('Decode {} threads.'.format(len(self.threads_list)))
+        self.logger.info('Decode {} threads.'.format(len(self.threads_list)))
 
     def check_sent(self):
         """
@@ -68,28 +73,36 @@ class StackerNews(object):
         for thread in self.threads_list:
             thread_db = self.db.get_thread(thread['id'])
             if thread_db:
-                logger.info('Thread "{}" exist in db, skip sending.'.format(thread['id']))
+                self.logger.info('Thread "{}" exist in db, skip sending.'.format(thread['id']))
                 continue
-            logger.info('Thread "{}" not exist in db, will be sent.'.format(thread['id']))
+            self.logger.info('Thread "{}" not exist in db, will be sent.'.format(thread['id']))
             self.threads_send.append(thread)
 
     def send_threads(self):
         """
         Send threads from self.threads_send to telegram
         """
-        logger.info('There are {} threads to be sent.'.format(len(self.threads_send)))
+        self.logger.info('There are {} threads to be sent.'.format(len(self.threads_send)))
         for thread in self.threads_send:
-            logger.info('Sending thread "{}".'.format(thread['id']))
-            logger.info('Adding thread "{}" to db.'.format(thread['id']))
+            self.logger.info('Sending thread "{}".'.format(thread['id']))
+            self.logger.info('Adding thread "{}" to db.'.format(thread['id']))
             self.db.add_thread(thread['id'], thread['title'], thread['sats'], thread['comments'])
             url = '{domain}/items/{thread}'.format(domain=self.domain, thread=thread['id'])
             message = self.message_template.format(title=replace(thread['title']),
                                                    sats=thread['sats'],
                                                    comments=thread['comments'],
                                                    url=replace(url))
-            logger.info('Message "{}" will be sent.'.format(message))
-            result = telegram_bot_send_text(message)
-            logger.info('Sending result: {}'.format(result))
+            self.logger.info('Message ID "{}", Title "{}" will be sent.'.format(thread['id'], thread['title']))
+            result = self.bot.send(message)
+            self.logger.info('Sending result: {}'.format(result))
+        self.logger.info('Total {} threads sent.'.format(len(self.threads_send)))
+
+    def init_bot(self):
+        self.bot = TelegramBot()
+
+    def init_db(self):
+        db = Database()
+        self.db = db.init_db()
 
     def init(self):
         self.threads = []
@@ -98,6 +111,12 @@ class StackerNews(object):
 
     def run(self):
         self.init()
+        if not self.db:
+            self.init_db()
+        if not self.bot:
+            self.init_bot()
+        if not self.logger:
+            self.logger = create_logger()
         self.get_top()
         self.get_threads()
         self.get_thread()

@@ -1,5 +1,7 @@
 
+db_type: sqlite  # or redis
 db_name: sqlite:///db/stacker.db
+redis_url: redis://localhost:6379/0
 
 log_name: StackerNews
 log_file: log/stacker-news-top.log

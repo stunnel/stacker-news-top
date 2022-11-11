@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 
-from lib import session, config
+from lib.utils import session
+from lib.config import load_config
 
-url = 'https://api.telegram.org/bot{}/sendMessage'.format(config['tg_token'])
 
+class TelegramBot(object):
+    def __init__(self):
+        self.config = load_config()
+        self.url = 'https://api.telegram.org/bot{}/sendMessage'.format(self.config['tg_token'])
 
-def telegram_bot_send_text(message):
-    """
-    Send message to telegram channel/chat_id/group via telegram bot.
-    """
-    data = {'chat_id': config['tg_chat_id'],
-            'text': message,
-            'parse_mode': 'MarkdownV2'}
-    response = session.post(url, json=data, headers={'Accept': 'application/json'})
-    return response.json()
+    def send(self, message):
+        data = {'chat_id': self.config['tg_chat_id'],
+                'text': message,
+                'parse_mode': 'MarkdownV2'}
+        response = session.post(self.url, json=data, headers={'Accept': 'application/json'})
+        return response.json()

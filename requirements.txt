@@ -4,3 +4,5 @@ sqlalchemy>=1.4.40
 beautifulsoup4>=4.11.1
 PyYAML>=6.0
 apscheduler
+redis
+pytest

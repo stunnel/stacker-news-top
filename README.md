@@ -12,9 +12,10 @@ Bot uses [Telegram Bot API](https://core.telegram.org/bots/api) to post messages
 - Run `pip3 install -r requirements.txt` to install dependencies
 - Create your bot via [BotFather](https://t.me/BotFather)
 - Rename `conf/config-sample.yaml` to `conf/config.yaml` and
+  - set `db_type` to `sqlite` or `redis`
   - replace `tg_chat_id` with your channel/chat/group id
   - replace `tg_token` with your bot token
-  - you can also change the `db_name`, `log_name` and `log_file`
+  - you can also change the `db_name`, `redis_url`, `log_name` and `log_file`
 - Run `python3 app.py` in the project folder
 - Use misc/stackernews.service to run the bot as a service
 
