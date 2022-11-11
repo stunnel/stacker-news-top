@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os
 import yaml
 import logging
 import requests
@@ -73,11 +74,42 @@ def replace(string: str) -> str:
 def load_config():
     """
     Load config from conf/config.yaml
+    {'db_name': 'sqlite:///db/stacker.db',
+     'log_name': 'StackerNews',
+     'log_file': 'log/stacker-news-top.log',
+     'tg_chat_id': -1000000000001,
+     'tg_token': '123456789:TELEGRAM_BOT_TOKEN_SAMPLE'
+    }
     """
-    with open('../conf/config.yaml', 'r') as f:
-        _config = yaml.safe_load(f)
-        return _config
+    try:
+        with open('conf/config.yaml', 'r') as f:
+            _config = yaml.safe_load(f)
+    except FileNotFoundError:
+        return load_config_from_env({})
+    except yaml.YAMLError:
+        return load_config_from_env({})
+    except Exception:
+        return load_config_from_env({})
 
+    return load_config_from_env(_config)
+
+
+def load_config_from_env(_config):
+    """
+    Load config from environment variables.
+    """
+    _config_env = {
+        'db_name': os.environ.get('DB_NAME', _config.get('db_name') or 'sqlite:///db/stacker.db'),
+        'log_name': os.environ.get('LOG_NAME', _config.get('log_name') or 'StackerNews'),
+        'log_file': os.environ.get('LOG_FILE', _config.get('log_file') or 'log/stacker-news-top.log'),
+        'tg_chat_id': os.environ.get('TG_CHAT_ID', _config.get('tg_chat_id')),
+        'tg_token': os.environ.get('TG_TOKEN', _config.get('tg_token'))
+    }
+
+    if not _config_env['tg_chat_id'] or not _config_env['tg_token']:
+        raise ValueError('Missing Telegram chat_id or token.')
+
+    return _config_env
 
 config = load_config()
 session = create_session()
