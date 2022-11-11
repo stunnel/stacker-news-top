@@ -21,6 +21,11 @@ class StackerNews(object):
         self.threads_list = []      # List of threads, dicts with keys: id, title, sats, comments
         self.threads_send = []      # List of threads to be sent, dicts with keys: id, title, sats, comments
 
+        self.class_threads = 'item_hunk__I7noX'
+        self.class_thread = 'item_title__f5MGn text-reset mr-2'
+        self.class_sats = 'item_other__qNlji'
+        self.class_comments = 'text-reset'
+
     def get_top(self):
         """
         Get top page of Stacker News and save it to self.soup_top
@@ -38,7 +43,7 @@ class StackerNews(object):
         Get threads from top page of Stacker News and save them to self.threads
         """
         logger.info('Getting threads.')
-        self.threads = self.soup_top.find_all('div', class_='item_hunk__12-LR')
+        self.threads = self.soup_top.find_all('div', class_=self.class_threads)
         logger.info('Got {} threads.'.format(len(self.threads)))
 
     def get_thread(self):
@@ -46,12 +51,12 @@ class StackerNews(object):
         Decode thread from BeautifulSoup object and save it to self.threads_list
         """
         for thread in self.threads:
-            thread_url = thread.find('a', class_='item_title__3l-8a text-reset mr-2').get('href')
+            thread_url = thread.find('a', class_=self.class_thread).get('href')
             # /items/59757
             thread_id = int(thread_url.split('/')[-1])
-            thread_title = thread.find('a', class_='item_title__3l-8a text-reset mr-2').text
-            thread_sats = int(thread.find('div', class_='item_other__2N34Y').find('span').text.replace(' sats', ''))
-            thread_comments = int(thread.find_all('a', class_='text-reset')[1].text.replace(' comments', ''))
+            thread_title = thread.find('a', class_=self.class_thread).text
+            thread_sats = thread.find('div', class_=self.class_sats).find('span').text.replace(' sats', '')
+            thread_comments = thread.find_all('a', class_=self.class_comments)[1].text.replace(' comments', '')
             thread = {'id': thread_id, 'title': thread_title, 'sats': thread_sats, 'comments': thread_comments}
             self.threads_list.append(thread)
         logger.info('Decode {} threads.'.format(len(self.threads_list)))
